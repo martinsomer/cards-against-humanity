@@ -1,0 +1,164 @@
+<script>
+    $('#black_card').text(window.props.black_card);
+
+    if (window.props.role === 'card_czar') {
+        $('#title').text('Players are choosing their answers');
+        $('#submit').addClass('invisible');
+
+        for (let i = 0; i < window.props.players_total; i++) {
+            const $card_element = $('<div/>', {
+                text: '?',
+                class: 'w-full px-[5px] py-[10px] text-center rounded-[5px] bg-white border border-dashed border-black',
+            });
+
+            $('#white_cards').append($card_element);
+        }
+    } else {
+        $('#title').text('Choose your answers');
+
+        for (let white_card of window.props.white_cards) {
+            const $card_element = $('<button/>', {
+                text: white_card,
+                class: 'relative w-full px-[5px] py-[10px] pr-[30px] text-left rounded-[5px] bg-white border border-black break-words hover:brightness-95'
+                    + ' [&.selected]:shadow-[0_0_10px_rgba(0,0,0,.75)]'
+                    + ' [&.selected]:before:content-[attr(index)]'
+                    + ' [&.selected]:before:w-[24px] [&.selected]:before:h-[24px] [&.selected]:before:absolute [&.selected]:before:top-[-6px] [&.selected]:before:right-[-6px]'
+                    + ' [&.selected]:before:text-center [&.selected]:before:rounded-[50%] [&.selected]:before:bg-black [&.selected]:before:text-white',
+                click: (event) => {
+                    const $target = $(event.target);
+                    
+                    if ($target.is('[index]')) {
+                        $('[index]').each((index, element) => {
+                            const $selected_card = $(element);
+
+                            if ($selected_card.attr('index') > $target.attr('index')) {
+                                $selected_card.attr('index', $selected_card.attr('index') - 1);
+                            }
+                        })
+
+                        $target.removeAttr('index').removeClass('selected');                        
+                    } else {
+                        const $selected_cards = $('[index]');
+
+                        if ($selected_cards.length < window.props.white_cards_max) {
+                            $target.attr('index', $selected_cards.length + 1).addClass('selected');
+                        }
+                    }
+                },
+            });
+
+            $('#white_cards').append($card_element);
+        }
+    }
+
+    function event_white_cards_chosen(props) {
+        $('#white_cards').empty();
+
+        if (window.props.role === 'card_czar') {
+            if (Object.keys(props.active_cards).length === window.props.players_total) {
+                $('#title').text('Choose your favorite answer');
+                $('#submit').removeClass('invisible');
+            }
+
+            for (let [player_id, white_cards] of Object.entries(props.active_cards)) {
+                const $card_container = $('<div/>', {
+                    class: 'w-full flex gap-[10px]'
+                        + ' [&.selected>*]:shadow-[0_0_10px_rgba(0,0,0,.75)] [&.selected]:brightness-95',
+                    player_id: player_id,
+                });
+
+                for (let white_card of white_cards) {
+                    const $card_element = $('<button/>', {
+                        text: white_card,
+                        class: 'w-full px-[5px] py-[10px] text-left rounded-[5px] bg-white border border-black break-words hover:brightness-95',
+                        click: (event) => {
+                            $('.selected').removeClass('selected');
+                            $(event.target).parent().addClass('selected');
+                        },
+                    });
+
+                    $card_container.append($card_element);
+                }
+
+                $('#white_cards').append($card_container);
+            }
+
+            for (let i = 0; i < window.props.players_total - Object.keys(props.active_cards).length; i++) {
+                const $card_element = $('<div/>', {
+                    text: '?',
+                    class: 'w-full px-[5px] py-[10px] text-center rounded-[5px] bg-white border border-dashed border-black',
+                });
+
+                $('#white_cards').append($card_element);
+            }
+        } else {
+            $('#title').text('Card Czar is choosing their favorite answer');
+            $('#submit').addClass('invisible');
+
+            for (let [player_id, white_cards] of Object.entries(props.active_cards)) {
+                const $card_container = $('<div/>', {
+                    class: 'flex gap-[10px]'
+                        + ' [&.selected>*]:shadow-[0_0_10px_rgba(0,0,0,.75)] [&.selected]:brightness-95',
+                });
+
+                for (let white_card of white_cards) {
+                    const $card_element = $('<button/>', {
+                        text: white_card,
+                        class: 'w-full px-[5px] py-[10px] text-left rounded-[5px] bg-white border border-black break-words hover:brightness-95',
+                    });
+
+                    $card_container.append($card_element);
+                }
+
+                $('#white_cards').append($card_container);
+            }
+
+            for (let i = 0; i < window.props.players_total - Object.keys(props.active_cards).length; i++) {
+                const $card_element = $('<div/>', {
+                    text: '?',
+                    class: 'w-full px-[5px] py-[10px] text-center rounded-[5px] bg-white border border-dashed border-black',
+                });
+
+                $('#white_cards').append($card_element);
+            }
+        }
+    }
+
+    function handle_submit () {
+        const socket = window.socket;
+        if (!socket.readyState) return;
+
+        if (window.props.role === 'player') {
+            const white_cards = [];
+
+            $('[index]')
+                .sort((a, b) => $(a).attr('index') - $(b).attr('index'))
+                .each((index, element) => white_cards.push($(element).text()));
+            
+            if (white_cards.length === window.props.white_cards_max) {
+                socket.send(JSON.stringify({
+                    type: 'white_cards_choose',
+                    content: { white_cards: white_cards },
+                }));
+            }
+        } else {
+            const $winning_player = $('.selected');
+            
+            if ($winning_player.length === 1) {
+                const player_id = $winning_player.attr('player_id');
+                socket.send(JSON.stringify({
+                    type: 'round_winner_choose',
+                    content: { player_id: player_id },
+                }));
+            }
+        }
+    }
+</script>
+<main class="flex w-full gap-[40px] md:flex-col md:items-center">
+    <div class="w-1/3 flex flex-col justify-center items-center gap-[10px] md:w-full md:contents">
+        <div class="w-full max-w-[300px] text-center text-lg uppercase text-[darkgray]" id="title"></div>
+        <div class="w-full max-w-[300px] aspect-[.75] p-[20px] rounded-[5px] bg-black text-white break-words" id="black_card"></div>
+        <button class="w-full max-w-[300px] min-h-[40px] px-[10px] rounded-[5px] bg-white border border-black text-lg uppercase hover:brightness-95 md:order-1" id="submit" onclick="handle_submit();">Confirm</button>
+    </div>
+    <div class="w-2/3 flex flex-col justify-center gap-[10px] md:w-full" id="white_cards"></div>
+</main>

@@ -1,0 +1,61 @@
+<script>
+    $('button').text(`Start game (0/${window.props.players_total})`);
+
+    function event_voted(props) {
+        const $button = $('button');
+
+        $button.text(`Start game (${props.players_voted}/${props.players_total})`);
+
+        if (props.already_voted) {
+            $button.attr('disabled', true);
+        }
+    }
+
+    function handle_submit() {
+        const socket = window.socket;
+        if (!socket.readyState) return;
+
+        socket.send(JSON.stringify({
+            type: 'game_start_vote',
+            content: {},
+        }));
+    }
+</script>
+<main class="w-full flex flex-col justify-center items-center gap-[40px]">
+    <div class="text-5xl font-bold uppercase text-center border-b border-[darkgray]">How to Play</div>
+
+    <div class="flex flex-col w-1/2 gap-[40px] md:w-full">
+        <ul class="flex flex-col list-disc m-0 gap-[10px] text-justify">
+            <div class="flex justify-center text-lg uppercase text-[darkgray] border-b border-[darkgray]">Basic Rules</div>
+
+            <li>
+                To start the game, each player draws ten White Cards.
+            </li>
+            <li>
+                One randomly chosen player begins as the Card Czar and plays a Black Card.
+            </li>
+            <li>
+                Everyone else answers the question or fills in the blank by passing one White Card, to the Card Czar.
+            </li>
+            <li>
+                The Card Czar then picks a favorite, and whoever played that answer keeps the Black Card as one Awesome Point.
+            </li>
+            <li>
+                After the round, a new player becomes the Card Czar, and everyone draws back up to ten White Cards.
+            </li>
+        </ul>
+    
+        <ul class="flex flex-col list-disc m-0 gap-[10px] text-justify">
+            <div class="flex justify-center text-lg uppercase text-[darkgray] border-b border-[darkgray]">Pick 2</div>
+            
+            <li>
+                Some cards say PICK 2 on the bottom.
+            </li>
+            <li>
+                To answer these, each player plays two White Cards in combinations. Play them in the order that the Card Czar should read them - the order matters.
+            </li>
+        </ul>
+
+        <button class="min-h-[40px] px-[10px] rounded-[5px] bg-white border border-black text-lg uppercase hover:brightness-95 disabled:brightness-95" onclick="handle_submit();"></button>
+    </div>
+</main>

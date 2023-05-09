@@ -1,0 +1,11 @@
+<script>
+    $('#awesome_points').text(`Awesome Points: ${window.props.awesome_points}`);
+    $('#position').text(`Your position: ${window.props.position} of ${window.props.players_total}`);
+</script>
+<main class="w-full flex flex-col items-center justify-center gap-[40px]">
+    <div class="w-auto text-center text-5xl uppercase text-[darkgray] font-bold border-b border-[darkgray]">Game over</div>
+    <div class="flex flex-col gap-[10px]">
+        <div class="text-[darkgray]" id="awesome_points"></div>
+        <div class="text-[darkgray]" id="position"></div>
+    </div>
+</main>

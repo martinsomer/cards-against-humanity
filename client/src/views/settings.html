@@ -1,0 +1,159 @@
+<script>
+    $('#room_code').text(window.props.room_id);
+
+    for (let [language, pack_count] of Object.entries(window.props.languages)) {
+        const $language_container = $('<div/>');
+
+        const $language_input = $('<input/>', {
+            type: 'radio',
+            value: language,
+            name: 'language',
+            click: () => {
+                $('#editions').children().not('legend').remove();
+
+                for (let i = 0; i < pack_count; i++) {
+                    const $edition_container = $('<div/>');
+
+                    const $edition_input = $('<input/>', {
+                        type: 'radio',
+                        value: i + 1,
+                        name: 'edition',
+                    });
+
+                    const $edition_label = $('<label/>', {
+                        class: 'ml-[10px] font-bold',
+                        text: `Pack ${i + 1}`,
+                    });
+
+                    $edition_container.append($edition_input, $edition_label);
+                    $('#editions').append($edition_container);
+                }
+
+                $('#editions').find('input').first().click();
+            },
+        });
+
+        const $language_label = $('<label/>', {
+            class: 'ml-[10px] font-bold',
+            text: language,
+        });
+
+        $language_container.append($language_input, $language_label);
+        $('#languages').append($language_container);
+    }
+
+    $('#languages').find('input').first().click();
+
+    function handle_submit(form) {
+        const socket = window.socket;
+        if (!socket.readyState) return;
+
+        const form_data = new FormData(form);
+        const data = Object.fromEntries(form_data);
+
+        socket.send(JSON.stringify({
+            type: 'settings_confirm',
+            content: { settings: data },
+        }));
+    }
+</script>
+<main class="w-full flex flex-col justify-center items-center gap-[40px]">
+    <div class="w-full flex flex-col items-center">
+        <div class="text-lg uppercase text-[darkgray]">Room Code</div>
+        <div class="text-5xl font-bold border-b border-[darkgray]" id="room_code"></div>
+    </div>
+
+    <form class="flex flex-col w-1/2 gap-[20px] md:w-full" action="javascript:void(0);" onsubmit="return handle_submit(this);">
+        <fieldset class="flex flex-col p-[10px] text-justify rounded-[5px] border border-black gap-[10px]" id="languages">
+            <legend class="px-[10px]">Language</legend>
+        </fieldset>
+
+        <fieldset class="flex flex-col p-[10px] text-justify rounded-[5px] border border-black gap-[10px]" id="editions">
+            <legend class="px-[10px]">Edition</legend>
+        </fieldset>
+
+        <fieldset class="hidden flex flex-col p-[10px] text-justify rounded-[5px] border border-black gap-[10px]">
+            <legend class="px-[10px]">Gambling</legend>
+            <div>
+                If a Black Card is played and you have more than one White Card that you think could win, you can bet one of your Awesome Points to play an additional White Card. If you win, you keep the point. If you lose, whoever won the round gets the point you wagered.
+            </div>
+            <div>
+                <input type="radio" value="disabled" name="gambling" checked>
+                <label class="font-bold">Disabled</label>
+            </div>
+            <div>
+                <input type="radio" value="enabled" name="gambling">
+                <label class="font-bold">Enabled</label>
+            </div>
+        </fieldset>
+
+        <fieldset class="hidden flex flex-col p-[10px] text-justify rounded-[5px] border border-black gap-[10px]">
+            <legend class="px-[10px]">House Rules</legend>
+            <div>
+                Cards Against Humanity is meant to be remixed. Here are some of our favorite ways to pimp out the rules:
+            </div>
+            <div>
+                <input type="radio" value="official_rules" name="house_rules" checked>
+                <label class="font-bold">Official Rules</label>
+            </div>
+            <div>
+                <input type="radio" value="happy_ending" name="house_rules">
+                <label class="font-bold">Happy Ending</label>
+                <div class="pl-[20px]">
+                    When you're ready to stop playing, play the "Make a Haiku" Black Card to end the game. This is the official ceremonial ending of a good game of Cards Against Humanity, and and this card should be reserved for the end. (Note: Haikus don't need to follow the 5-7-5 form. They just have to be read dramatically).
+                </div>
+            </div>
+            <div>
+                <input type="radio" value="rebooting_the_universe" name="house_rules">
+                <label class="font-bold">Rebooting the Universe</label>
+                <div class="pl-[20px]">
+                    At any time, players may trade in an Awesome Point to return as many White Cards as they'd like to the deck and draw back up to ten.
+                </div>
+            </div>
+            <div>
+                <input type="radio" value="packing_heat" name="house_rules">
+                <label class="font-bold">Packing Heat</label>
+                <div class="pl-[20px]">
+                    For Pick 2s, all players draw an extra card before playing the hand to open up more options.
+                </div>
+            </div>
+            <div>
+                <input type="radio" value="rando_cardrissian" name="house_rules">
+                <label class="font-bold">Rando Cardrissian</label>
+                <div class="pl-[20px]">
+                    Every round, pick one random White Card from the pile and place it into play. This card belongs to an imaginary player named Rando Cardrissian, and if he wins the game, all players go home in a state of everlasting shame.
+                </div>
+            </div>
+            <div>
+                <input type="radio" value="god_is_dead" name="house_rules">
+                <label class="font-bold">God is Dead</label>
+                <div class="pl-[20px]">
+                    Play without a Card Czar. Each player picks his or her favorite card each round. The card with the most votes wins the round.
+                </div>
+            </div>
+            <div>
+                <input type="radio" value="survival_of_the_fittest" name="house_rules">
+                <label class="font-bold">Survival of the Fittest</label>
+                <div class="pl-[20px]">
+                    After everyone has answered the question, players take turns eliminating one card each. The last remaining card is declared the funniest.
+                </div>
+            </div>
+            <div>
+                <input type="radio" value="serious_business" name="house_rules">
+                <label class="font-bold">Serious Business</label>
+                <div class="pl-[20px]">
+                    Instead of picking a favorite card each round, the Card Czar ranks the top three in order. The best card gets 3 Awesome Points, the second best gets 2, and the third gets 1. Keep a running a tally of the score, and at the end of the game, the winner is declared the funniest, mathematically speaking.
+                </div>
+            </div>
+            <div>
+                <input type="radio" value="never_have_i_ever" name="house_rules">
+                <label class="font-bold">Never Have I Ever</label>
+                <div class="pl-[20px]">
+                    At any time, players players may discard cards that they don't understand, but they must confess their ignorance to the group and suffer the resulting humiliation.
+                </div>
+            </div>
+        </fieldset>
+
+        <button class="min-h-[40px] px-[10px] rounded-[5px] bg-white border border-black text-lg uppercase hover:brightness-95">Start Game</button>
+    </form>
+</main>
